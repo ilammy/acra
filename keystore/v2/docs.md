@@ -87,6 +87,32 @@ that contains a set of keys necessary for the correct operation of the component
 | Data encryption (AcraStruct)      | AcraServer<br/>AcraTranslator | → AcraWriter<br/>→ AcraServer in Transparent proxy mode |
 | Authentication storage key<br/>for AcraWebConfig's users | AcraServer | |
 
+### Key store versions
+
+We keep improving key storage and management in Acra.
+Starting from version 0.86 all Acra services support a new storage format: key store version 2.
+New features include:
+
+  - Stronger key integrity validation, preventing even more tamepring attempts.
+  - Improved paritioning of the keys, allowing for simpler configuration correctness checks.
+  - Tracking additional key metadata, such as key validity periods and active states.
+  - Compliance with best practices and recommendations,
+    such as [NIST SP 800-57](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r4.pdf).
+  - Support for more external KMS types (only in Acra Enterprise Edition).
+
+Key store version 1 is the current version, used by new Acra instances by default.
+You can *opt in* the new version 2 when generating keys by using the `--keystore=v2` option.
+Acra components can tell which key store version is currently in use,
+so special attention is necessary only during the initial key generation and exchange.
+
+Of course it is also possible to convert existing key folders into the new format.
+See [Migrating from key store v1](/pages/documentation-acra/#migrating-from-key-store-v1)
+on how to migrate existing Acra deployments to the new key store version.
+
+Key store version affects only the storage format, not the content of the keys which stays the same.
+This means that Acra components can run with different key store versions.
+For example, AcraServer may use improved version 2 while AcraConnector is still using version 1.
+
 ### Generating all the Acra keys in one go
 
 We described many keys here and the private keys are those keys that are (obviously) stored in an encrypted form. There's a very special key `ACRA_MASTER_KEY` that is used for decryption of private keys for every Acra service. Look after this key very carefully!
@@ -257,6 +283,8 @@ If the private keys are lost, there will be no way to decrypt the data either. S
 We recommend storing private keys and the master key in a reliable place (i.e. KMS, HSM).
 
 [Acra Pro and Acra EE users](https://www.cossacklabs.com/acra/#pricing) have a chance to retrieve their public keys if you still have your private keys and master keys. If you’ve encountered such a problem, please [contact us](mailto:dev@cossacklabs.com).
+
+### Migrating from key store v1
 
 ### Key decryption errors
 

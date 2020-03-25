@@ -4,16 +4,31 @@ NOTE: This is draft of documentation to be published [on the doc server](https:/
 
 There are several types of keys used in Acra:
 
-* Keys for transport encryption. Acra uses either [Themis Secure Session](/pages/secure-session-cryptosystem/) or TLS as transport protection between AcraServer and AcraConnector, or AcraTranslator and AcraConnector. In Themis Secure Session mode, Acra uses transport keypairs: the two parties should exchange public keys, keeping the private keys to themselves. In TLS mode, Acra uses TLS certificates instead of transport keypairs.
+  * **Keys for transport encryption.**
+    Acra uses either [Themis Secure Session](/pages/secure-session-cryptosystem/) or TLS
+    as transport protection between AcraServer and AcraConnector, or AcraTranslator and AcraConnector.
+    In Themis Secure Session mode, Acra uses transport keypairs:
+    the two parties should exchange public keys, keeping the private keys to themselves.
+    In TLS mode, Acra uses TLS certificates instead of transport keypairs.
 
-* Storage keypair: AcraWriter uses the public key for data encryption, AcraServer/AcraTranslator use private storage key for data decryption.
+  * **Storage keypair.**
+    AcraWriter uses the public key for data encryption.
+    AcraServer/AcraTranslator use private storage key for data decryption.
 
-* Authentication storage key for encryption/decryption credentials of AcraWebConfig users.
+  * Authentication storage key for encryption/decryption credentials of AcraWebConfig users.
+
+  * Acra Enterprise Edition has more keys powering features like searchable encryption, tamper-proof audit log, etc.
 
 Storage keys can be represented by either:
 
-  * One keypair for each unique `client_id`([default Zone mode](/pages/documentation-acra/#zones)), which is used for encryption by AcraWriter and decryption by AcraServer/AcraTranslator (so, in fact, there can be many such keypairs, one for each `client_id`).
-  * A set of Zone keys ([multiple Zone mode](/pages/documentation-acra/#zones)). Each Zone represents a unique user or type of users and has corresponding encryption and decryption keys. Using Zones complicates unwanted decryption: the attacker not only needs to get the decryption key but to use a correct Zone Id, too.
+  * One keypair for each unique `client_id`([default Zone mode](/pages/documentation-acra/#zones)),
+    which is used for encryption by AcraWriter and decryption by AcraServer/AcraTranslator
+    (so, in fact, there can be many such keypairs: one for each `client_id`).
+
+  * A set of Zone keys ([multiple Zone mode](/pages/documentation-acra/#zones)).
+    Each Zone represents a unique user or type of users and has corresponding encryption and decryption keys.
+    Using Zones complicates unwanted decryption:
+    the attacker not only needs to get the decryption key but to use a correct Zone Id, too.
 
 ### Key names and locations
 

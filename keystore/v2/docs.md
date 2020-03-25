@@ -115,18 +115,43 @@ For example, AcraServer may use improved version 2 while AcraConnector is still 
 
 ### Generating all the Acra keys in one go
 
-We described many keys here and the private keys are those keys that are (obviously) stored in an encrypted form. There's a very special key `ACRA_MASTER_KEY` that is used for decryption of private keys for every Acra service. Look after this key very carefully!
+We described many keys here and the private keys are those ones that are (obviously) stored in an encrypted form.
+There are very special **master keys** that are used by each Acra service to decrypt private keys as necessary.
+Look after the master keys very carefully!
+If you lose them, all your data is gone.
 
-> Note: Due to security reasons, AcraConnector and AcraServer/AcraTranslator need to have different `ACRA_MASTER_KEY`.
+> **Note:**
+> Due to security reasons,
+> AcraConnector and AcraServer/AcraTranslator need to have *different* master keys.
 
-#### 1.1 Generating `ACRA_MASTER_KEY` on AcraServer/AcraTranslator
+Current key store version 1 uses one master key called `ACRA_MASTER_KEY`.
+New key store version 2 uses two distinct master keys: `ACRA_MASTER_ENCRYPTION_KEY` and `ACRA_MASTER_SIGNATURE_KEY`.
 
-Use `acra-keymaker` to generate master key into `master.key` file and assign it into the environment variable on the corresponding server:
+#### 1.1 Generating master keys on AcraServer/AcraTranslator
 
-```
+Use `acra-keymaker` utility to generate new master key and save it into a file.
+By default, Acra components retrieve master keys from environment variables as base64-encoded strings.
+Acra Enterprise Edition supports more options,
+such as hardware security modules (HSM) and external key management services (KMS).
+
+Generate a new key and assign it to the environment variable on the corresponding server:
+
+```shell
 go install github.com/cossacklabs/acra/cmd/acra-keymaker
+
 $GOPATH/bin/acra-keymaker --generate_master_key=master.key
-export ACRA_MASTER_KEY=`cat master.key | base64`
+
+export ACRA_MASTER_KEY=$(cat master.key | base64)
+```
+
+With key store version 2 you will need to generate two different master keys:
+
+```shell
+$GOPATH/bin/acra-keymaker --generate_master_key=master_encryption.key
+$GOPATH/bin/acra-keymaker --generate_master_key=master_signature.key
+
+export ACRA_MASTER_ENCRYPTION_KEY=$(cat master_encryption.key | base64)
+export ACRA_MASTER_SIGNATURE_KEY=$(cat master_signature.key | base64)
 ```
 
 #### 1.2 Generating transport and encryption keys on AcraServer/AcraTranslator

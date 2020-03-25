@@ -79,16 +79,13 @@ that contains a set of keys necessary for the correct operation of the component
 
 #### Keys table
 
-| Purpose  | Private key  | Stays on  | Public key  |Put to  |
---- | --- | --- | --- | ---
-| Transport AcraConnector | clientid | AcraConnector | clientid.pub | -> AcraServer<br/>-> AcraTranslator |
-| Transport AcraServer | clientid_server| AcraServer | clientid_server.pub | -> AcraConnector |
-| Transport AcraTranslator | clientid_translator| AcraTranslator | clientid_translator.pub | -> AcraConnector |
-| AcraStruct encryption |  |  | clientid_storage.pub | -> AcraWriter<br/>-> AcraServer in Transparent proxy mode |
-| AcraStruct decryption | clientid_storage | AcraServer/<br/>AcraTranslator |  |  |
-| AcraStruct encryption with Zones |  |  | zoneid_zone.pub | -> AcraWriter<br/>-> AcraServer in Transparent proxy mode |
-| AcraStruct decryption with Zones | zoneid_zone | AcraServer/<br/>AcraTranslator |  |  |
-| Authentication storage key<br/>for AcraWebConfig's users | auth_key| AcraServer | | |
+| Purpose | Private key stays on | Public key exchanged with |
+| ------- | -------------------- | ------------------------- |
+| Transport: AcraConnector          | AcraConnector     | → AcraServer<br/>→ AcraTranslator |
+| Transport: AcraServer             | AcraServer        | → AcraConnector |
+| Transport: AcraTranslator         | AcraTranslator    | → AcraConnector |
+| Data encryption (AcraStruct)      | AcraServer<br/>AcraTranslator | → AcraWriter<br/>→ AcraServer in Transparent proxy mode |
+| Authentication storage key<br/>for AcraWebConfig's users | AcraServer | |
 
 ### Generating all the Acra keys in one go
 

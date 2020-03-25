@@ -1,5 +1,7 @@
 module github.com/cossacklabs/acra
 
+go 1.14
+
 require (
 	github.com/cossacklabs/themis v0.0.0-20190313112615-419d5a3c2ca8
 	github.com/go-sql-driver/mysql v1.4.1

@@ -392,24 +392,39 @@ With key store version 1, previous keys are stored in `.old` directories:
 
 Key store version 2 stores all key versions together inside the `.keyring` files.
 
-### Renaming your keys
+#### Renaming your keys
 
-Acra stores private keys in encrypted form. Each key has a special filename associated with its `<client_id>`.
+Acra stores private keys in encrypted form.
+Each key has a special filename associated with its Client or Zone ID.
 
-The keys are encrypted using Authenticated Encryption with Associated Data (AEAD), where `<client_id>` acts as associated data for AEAD. This means that if you rename any private key (transport, storage, poison_record key, etc.) in the filesystem and lose the information about its former name, Acra won’t be able to decrypt the key. In this case, it’ll be impossible to decrypt the data and you will lose it (if you have no backup).
+The keys are encrypted using Authenticated Encryption with Associated Data (AEAD),
+where the Client or Zone ID acts as associated data for AEAD.
+This means that if you rename any private key file (transport, storage, poison record key, etc.)
+and lose the information about its former name,
+Acra won’t be able to decrypt the key.
+In this case, it will be impossible to decrypt the data and you will lose access to it.
 
-Do not rename your key(s). If you did – rename the key(s) back to `<client_id>_<key type>` before attempting to decrypt your data.
+Do not rename your key(s).
+If you did – rename them back to their original name before attempting to decrypt your data.
+Keep in mind that carelessly renaming files may accidentally overwrite and delete keys.
 
+#### Losing your keys
 
-### Losing your keys
+If you lose the [master key](/pages/documentation-acra/#generating-all-the-acra-keys-in-one-go)
+that’s used for launching AcraServer, it won’t be able to decrypt the data.
+Yes, it means that there will be absolutely no way to decrypt your data and you’ll lose it forever.
+Store the master key safely!
+Make, refresh, and regularly check backups.
 
-If you lose the [master key](/pages/documentation-acra/#generating-all-the-acra-keys-in-one-go) that’s used for launching AcraServer, you won’t be able to decrypt the data. Yes, it means that there will be no way to decrypt the data and you’ll lose if forever. Store the master key safely!
+If the private keys are lost, there will be no way to decrypt the data either.
+So store the private keys safely as well!
 
-If the private keys are lost, there will be no way to decrypt the data either. Store the private keys safely!
+We recommend storing private keys and the master key in a reliable place (e.g., KMS, HSM).
 
-We recommend storing private keys and the master key in a reliable place (i.e. KMS, HSM).
-
-[Acra Pro and Acra EE users](https://www.cossacklabs.com/acra/#pricing) have a chance to retrieve their public keys if you still have your private keys and master keys. If you’ve encountered such a problem, please [contact us](mailto:dev@cossacklabs.com).
+[Acra Pro and Acra EE users](https://www.cossacklabs.com/acra/#pricing)
+have a chance to retrieve their public keys
+if you still have your private keys and master keys.
+If you’ve encountered such a problem, please [contact us](mailto:dev@cossacklabs.com).
 
 ### Migrating from key store v1
 

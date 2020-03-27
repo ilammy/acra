@@ -339,20 +339,58 @@ By decoding a base64-wrapped public key, you get a binary Zone key which should 
 
 Read more about using Zones in the [AcraWriter guide](/pages/documentation-acra/#acraconnector-and-acrawriter#writing).
 
-### (Re)Generating only some of the keys
+### Operating the key store
 
-If you want to update or re-generate only some particular keys, it can be easily done via CLI parameters for `acra-keymaker`:
+#### (Re)Generating only some of the keys
 
-- `--generate_acraconnector_keys` – generates AcraConnector transport keypair;
-- `--generate_acraserver_keys` – generates AcraServer transport keypair;
-- `--generate_acratranslator_keys` – generates AcraTranslator transport keypair;
-- `--generate_acrawriter_keys` – generates data storage keypair to be split between AcraWriter and AcraServer/AcraTranslator;
-- `--generate_acrawebconfig_keys` – generates a symmetric key for encrypting credentials of AcraWebconfig' users;
-- `--generate_master_key` – generates new `ACRA_MASTER_KEY`, all private keys should be re-generated after changing master key.
+If you want to update or re-generate (rotate) only some particular keys,
+it can be easily done via CLI parameters for `acra-keymaker`:
 
-Remember to use separate `ACRA_MASTER_KEY` for AcraConnector and AcraServer/AcraTranslator.
+| Parameter | Key |
+| --------- | --- |
+| `--generate_acraconnector_keys`   | AcraConnector transport keypair     |
+| `--generate_acraserver_keys`      | AcraServer transport keypair        |
+| `--generate_acratranslator_keys`  | AcraTranslator transport keypair    |
+| `--generate_acrawriter_keys`      | data storage keypair for AcraWriter |
+| `--generate_acrawebconfig_keys`   | symmetric key for AcraWebconfig     |
+| `--generate_master_key`           | new master keys for all services    |
 
-If you suddenly update `ACRA_MASTER_KEY` on AcraServer/AcraTranslator, it won't be able to decrypt old private keys (thus won't be able to decrypt AcraStructs/data at all).
+Remember to share newly generated public keys with peer services that need them:
+
+  - AcraConnector public key → AcraServer/AcraTranslator
+  - AcraServer public key → AcraConnector
+  - AcraTranslator public key → AcraConnector
+  - data storage public key → AcraWriter (private key stays on AcraServer/AcraTranslator)
+
+Also remember to use separate master key sets for AcraConnector and AcraServer/AcraTranslator.
+
+> **⚠️ Note:**
+> After generating a new master key you *have to* reinitialise the key store.
+> If you don't do it, Acra services will not be able decrypt old private keys,
+> and thus will not be able to communicate or decrypt any data at all.
+>
+> If you update the encryption key (`ACRA_MASTER_KEY` or `ACRA_MASTER_ENCRYPTION_KEY`),
+> you need to regenerate all relevant private keys with `acra-keymaker`
+> (and then distribute new public keys to peers).
+>
+> If you update the signature key (`ACRA_MASTER_SIGNATURE_KEY`),
+> you need to reimport the entire key store in order to resign it.
+> <!-- TODO: And what tool should I use for that?.. -->
+
+Old versions of the keys are preserved after rotation.
+With key store version 1, previous keys are stored in `.old` directories:
+
+```
+.acrakeys
+├── your_client_ID_storage
+├── your_client_ID_storage.old
+│   └── 2020-03-27T07:47:47.929575
+├── your_client_ID_storage.pub
+└── your_client_ID_storage.pub.old
+    └── 2020-03-27T07:47:47.930778
+```
+
+Key store version 2 stores all key versions together inside the `.keyring` files.
 
 ### Renaming your keys
 

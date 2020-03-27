@@ -185,7 +185,16 @@ The generator will generate and place resulting keys into the `.acrakeys` direct
 └── your_client_ID_translator.pub
 ```
 
-If you wish to use the new [key store version 2](/pages/documentation-acra/#key-store-versions),
+> **Note:**
+> Stored keys should not be world-readable.
+> `acra-keymaker` generates keys with proper access permissions:
+>
+>   - `.acrakeys` directory: `rwx------` (700)
+>   - private key files: `rw-------` (600)
+>
+> AcraServer and AcraTranslator check this and will refuse to launch if access to the keys is not properly restricted.
+
+If you are running Acra 0.86+ and wish to use the new [key store version 2](/pages/documentation-acra/#key-store-versions),
 add `--keystore=v2` option when generating the keys:
 
 ```shell
@@ -207,23 +216,27 @@ In this case the directory layout will be a bit different:
 └── version
 ```
 
-> **Note:**
-> Stored keys should not be world-readable.
-> `acra-keymaker` generates keys with proper access permissions:
->
->   - `.acrakeys` directory: `rwx------` (700)
->   - private key files: `rw-------` (600)
->
-> Acra components check this and will refuse to launch if access to the keys is not properly restricted.
+#### 2.1 Generating master keys on AcraConnector
 
-#### 2.1 Generating `ACRA_MASTER_KEY` on AcraConnector
+Generate a second set of master keys for AcraConnector in the same way,
+but on the server that runs AcraConnector:
 
-Generate second `ACRA_MASTER_KEY` for AcraConnector in the same way, but on the server that runs AcraConnector:
-
-```
+```shell
 go install github.com/cossacklabs/acra/cmd/acra-keymaker
+
 $GOPATH/bin/acra-keymaker --generate_master_key=master.key
-export ACRA_MASTER_KEY=`cat master.key | base64`
+
+export ACRA_MASTER_KEY=$(cat master.key | base64)
+```
+
+If you are going to use key store version 2, you will need two master keys:
+
+```shell
+$GOPATH/bin/acra-keymaker --generate_master_key=master_encryption.key
+$GOPATH/bin/acra-keymaker --generate_master_key=master_signature.key
+
+export ACRA_MASTER_ENCRYPTION_KEY=$(cat master_encryption.key | base64)
+export ACRA_MASTER_SIGNATURE_KEY=$(cat master_signature.key | base64)
 ```
 
 #### 2.2 Generating transport keys on AcraConnector
@@ -231,7 +244,7 @@ export ACRA_MASTER_KEY=`cat master.key | base64`
 Similarly generate transport key for AcraConnector:
 
 ```
-$GOPATH/bin/acra-keymaker --client_id=someid --generate_acraconnector_keys
+$GOPATH/bin/acra-keymaker --client_id=your_client_ID --generate_acraconnector_keys
 ```
 
 Carry out these operations on the machine running AcraConnector to make sure that the private keys of AcraConnector never leak outside it.
@@ -239,15 +252,37 @@ Carry out these operations on the machine running AcraConnector to make sure tha
 The generator will generate and place 2 keys into the `.acrakeys` directory (you can change this with `--keys_output_dir` argument):
 
 ```bash
-.acrakeys/someid
-.acrakeys/someid.pub
+.acrakeys
+├── your_client_ID
+└── your_client_ID.pub
 ```
 
-> Note: For `acra` to work properly, the key folders have to have proper permissions as set by `acra-keymaker`:
+> **Note:**
+> Stored keys should not be world-readable.
+> `acra-keymaker` generates keys with proper access permissions:
+>
+>   - `.acrakeys` directory: `rwx------` (700)
+>   - private key files: `rw-------` (600)
+>
+> AcraConnector checks this and will refuse to launch if access to the keys is not properly restricted.
 
-* folder 700.
-* private keys 600.
+If you are running Acra 0.86+ and wish to use the new [key store version 2](/pages/documentation-acra/#key-store-versions),
+add `--keystore=v2` option when generating the keys:
 
+```
+$GOPATH/bin/acra-keymaker --keystore=v2 --client_id=your_client_ID --generate_acraconnector_keys
+```
+
+In this case the resulting directory layout will be a bit different:
+
+```
+.acrakeys
+├── client
+│   └── your_client_ID
+│       └── transport
+│           └── connector.keyring
+└── version
+```
 
 #### 3. Key exchange
 

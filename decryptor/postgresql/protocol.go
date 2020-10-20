@@ -92,6 +92,24 @@ func (p *PgProtocolState) HandleClientPacket(packet *PacketHandler) error {
 		return nil
 	}
 
+	if packet.IsParameterDescription() {
+		description, err := packet.GetParameterDescription()
+		if err != nil {
+			logger.WithError(err).Errorln("Can't parse ParameterDescription packet")
+			return err
+		}
+		logger.Debugf("ParameterDescription: %+v", description)
+	}
+
+	if packet.IsRowDescription() {
+		description, err := packet.GetRowDescription()
+		if err != nil {
+			logger.WithError(err).Errorln("Can't parse RowDescription packet")
+			return err
+		}
+		logger.Debugf("RowDescription: %+v", description)
+	}
+
 	// Parse packets initiate extended query protocol.
 	if packet.IsParse() {
 		parsePacket, err := packet.GetParseData()

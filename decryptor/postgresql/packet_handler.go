@@ -376,6 +376,30 @@ func (packet *PacketHandler) ReplaceBind(bindPacket *BindPacket) error {
 	return nil
 }
 
+// GetParameterDescription returns parsed ParameterDescription packet data.
+// Use this only if IsParameterDescription() is true.
+func (packet *PacketHandler) GetParameterDescription() (*ParameterDescriptionPacket, error) {
+	packet.logger.Debugln("GetParameterDescription")
+	description, err := NewParameterDescriptionPacket(packet.descriptionBufferCopy())
+	if err != nil {
+		packet.logger.Debugln("Failed to parse ParameterDescription packet")
+		return nil, err
+	}
+	return description, nil
+}
+
+// GetRowDescription returns parsed RowDescription packet data.
+// Use this only if IsRowDescription() is true.
+func (packet *PacketHandler) GetRowDescription() (*RowDescriptionPacket, error) {
+	packet.logger.Debugln("GetRowDescription")
+	description, err := NewRowDescriptionPacket(packet.descriptionBufferCopy())
+	if err != nil {
+		packet.logger.Debugln("Failed to parse RowDescription packet")
+		return nil, err
+	}
+	return description, nil
+}
+
 // GetSimpleQuery return query value as string from Query packet
 func (packet *PacketHandler) GetSimpleQuery() (string, error) {
 	return string(packet.descriptionBuf.Bytes()[:packet.dataLength-1]), nil

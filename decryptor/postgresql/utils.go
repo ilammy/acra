@@ -417,6 +417,51 @@ func NewParameterDescriptionPacket(data []byte) (*ParameterDescriptionPacket, er
 	return &ParameterDescriptionPacket{oidValues}, nil
 }
 
+// RowDescriptionPacket is "RowDescription" packet of the PostgreSQL protocol,
+// containing the types of extended query parameters.
+// See https://www.postgresql.org/docs/current/protocol-message-formats.html
+type RowDescriptionPacket struct {
+	fields []RowField
+}
+
+// RowField is a field of a row in RowDescriptionPacket.
+type RowField struct {
+	name         string
+	tableOID     uint32
+	columnIndex  uint16
+	dataTypeOID  uint32
+	dataSize     int16
+	typeModifier uint32
+	format       uint16
+}
+
+// NewRowDescriptionPacket parses RowDescription packet from data.
+func NewRowDescriptionPacket(data []byte) (*RowDescriptionPacket, error) {
+	var fields []RowField
+	remaining := data
+
+	// First read the field count, a uint16.
+	if len(remaining) < 2 {
+		return nil, ErrPacketTruncated
+	}
+	fieldCount := int(binary.BigEndian.Uint16(remaining[:2]))
+	remaining = remaining[2:]
+
+	// Don't allocate if there are not fields in response. It's quite common.
+	if fieldCount > 0 {
+		var err error
+		fields = make([]RowField, fieldCount)
+		for i := range fields {
+			fields[i], remaining, err = readRowField(remaining)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return &RowDescriptionPacket{fields}, nil
+}
+
 func readString(data []byte) (string, []byte, error) {
 	// Read null-terminated string, don't include the terminator into value.
 	end := bytes.Index(data, terminator)
@@ -552,4 +597,26 @@ func readOIDArray(data []byte) ([]uint32, []byte, error) {
 	}
 
 	return items, remaining, nil
+}
+
+func readRowField(data []byte) (result RowField, remaining []byte, err error) {
+	remaining = data
+
+	result.name, remaining, err = readString(remaining)
+	if err != nil {
+		return result, data, err
+	}
+
+	// Make sure we can read all the following fields without panics.
+	if len(remaining) < 4+2+4+2+4+2 {
+		return result, data, ErrPacketTruncated
+	}
+	result.tableOID = binary.BigEndian.Uint32(remaining[0:4])
+	result.columnIndex = binary.BigEndian.Uint16(remaining[4:6])
+	result.dataTypeOID = binary.BigEndian.Uint32(remaining[6:10])
+	result.dataSize = int16(binary.BigEndian.Uint16(remaining[10:12]))
+	result.typeModifier = binary.BigEndian.Uint32(remaining[12:16])
+	result.format = binary.BigEndian.Uint16(remaining[16:18])
+
+	return result, remaining, nil
 }

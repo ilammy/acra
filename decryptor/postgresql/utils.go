@@ -24,6 +24,7 @@ import (
 
 	"github.com/cossacklabs/acra/decryptor/base"
 	"github.com/cossacklabs/acra/utils"
+	"github.com/lib/pq/oid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -389,6 +390,33 @@ func NewExecutePacket(data []byte) (*ExecutePacket, error) {
 	return &ExecutePacket{portal, maxRows}, nil
 }
 
+// ParameterDescriptionPacket is "ParameterDescription" packet of the PostgreSQL protocol,
+// containing the types of extended query parameters.
+// See https://www.postgresql.org/docs/current/protocol-message-formats.html
+type ParameterDescriptionPacket struct {
+	oidValues []uint32
+}
+
+// ErrInvalidParameterIndex is returned when the parameter index is not in range for parameter count.
+var ErrInvalidParameterIndex = errors.New("parameter index out of range")
+
+// ParameterOID returns OID of the parameter with given index.
+func (p *ParameterDescriptionPacket) ParameterOID(index int) (oid.Oid, error) {
+	if 0 <= index && index < len(p.oidValues) {
+		return oid.Oid(p.oidValues[index]), nil
+	}
+	return 0, ErrInvalidParameterIndex
+}
+
+// NewParameterDescriptionPacket parses ParameterDescription packet from data.
+func NewParameterDescriptionPacket(data []byte) (*ParameterDescriptionPacket, error) {
+	oidValues, _, err := readOIDArray(data)
+	if err != nil {
+		return nil, err
+	}
+	return &ParameterDescriptionPacket{oidValues}, nil
+}
+
 func readString(data []byte) (string, []byte, error) {
 	// Read null-terminated string, don't include the terminator into value.
 	end := bytes.Index(data, terminator)
@@ -503,4 +531,25 @@ func writeParameterArray(buf *bytes.Buffer, parameters [][]byte) (int, error) {
 	}
 
 	return totalLength, nil
+}
+
+func readOIDArray(data []byte) ([]uint32, []byte, error) {
+	remaining := data
+	// The []uint32 array is prefixed with a number of its items, a uint16.
+	if len(remaining) < 2 {
+		return nil, data, ErrPacketTruncated
+	}
+	itemCount := int(binary.BigEndian.Uint16(remaining[:2]))
+	remaining = remaining[2:]
+
+	if len(remaining) < 4*itemCount {
+		return nil, data, ErrPacketTruncated
+	}
+	items := make([]uint32, itemCount)
+	for i := range items {
+		items[i] = binary.BigEndian.Uint32(remaining[:4])
+		remaining = remaining[4:]
+	}
+
+	return items, remaining, nil
 }

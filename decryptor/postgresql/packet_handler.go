@@ -293,6 +293,16 @@ func (packet *PacketHandler) IsExecute() bool {
 	return packet.messageType[0] == ExecuteMessageType
 }
 
+// IsParameterDescription return true if packet has ParameterDescripton type
+func (packet *PacketHandler) IsParameterDescription() bool {
+	return packet.messageType[0] == ParameterDescriptionType
+}
+
+// IsRowDescription return true if packet has RowDescripton type
+func (packet *PacketHandler) IsRowDescription() bool {
+	return packet.messageType[0] == RowDescriptionType
+}
+
 // GetParseData returns parsed Parse packet data.
 // Use this only if IsParse() is true.
 func (packet *PacketHandler) GetParseData() (*ParsePacket, error) {

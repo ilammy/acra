@@ -93,6 +93,8 @@ const (
 	ParseMessageType         byte = 'P'
 	BindMessageType          byte = 'B'
 	ExecuteMessageType       byte = 'E'
+	ParameterDescriptionType byte = 't'
+	RowDescriptionType       byte = 'T'
 	ParseCompleteMessageType byte = '1'
 	BindCompleteMessageType  byte = '2'
 	ReadyForQueryMessageType byte = 'Z'
